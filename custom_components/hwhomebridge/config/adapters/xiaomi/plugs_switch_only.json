@@ -1,0 +1,43 @@
+{
+  "pid": "008",
+  "match_rules": [
+    {
+      "type": "model_exact",
+      "model": "chuangmi.plug.212a01"
+    },
+    {
+      "type": "model_exact",
+      "model": "yutai.plug.fsov7m"
+    },
+    {
+      "type": "model_exact",
+      "model": "cddz.plug.pc04m"
+    }
+  ],
+  "services": {
+    "switch": {
+      "domain": "switch",
+      "action": "turn_on_off",
+      "value_attr": "state",
+      "include_keywords": [
+        "_on_p_2_1"
+      ],
+      "exclude_keywords": [],
+      "name_keywords": [
+        "_on_p_2_1"
+      ]
+    },
+    "electric": {
+      "domain": ""
+    },
+    "voltage": {
+      "domain": ""
+    },
+    "power": {
+      "domain": ""
+    },
+    "current": {
+      "domain": ""
+    }
+  }
+}

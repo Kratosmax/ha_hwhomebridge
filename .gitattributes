@@ -1,3 +1,8 @@
 # HiLink SDK checks the exact SHA-256 of these files; preserve LF line endings.
 custom_components/hwhomebridge/hilink_bridge/config/hilink.cfg text eol=lf
 custom_components/hwhomebridge/hilink_bridge/config/hilink_bak.cfg text eol=lf
+custom_components/hwhomebridge/hilink_bridge/aircon/config/*.cfg text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf

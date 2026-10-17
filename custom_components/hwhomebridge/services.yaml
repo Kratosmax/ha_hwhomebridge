@@ -1,0 +1,6 @@
+aircon_diagnostics:
+  name: 空调桥接诊断
+  description: 只读返回空调映射、网关状态和注册诊断。
+aircon_test_off:
+  name: 空调关闭路由测试
+  description: 仅在空调已经关闭时再次调用关闭，验证HA控制路由。

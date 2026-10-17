@@ -104,3 +104,22 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         # 确保无论通知是否成功，都执行清理
         await hass.async_add_executor_job(stop_hw_hilink_bridge, hass)
         _LOGGER.info("hwhomebridge integration removed, gateway cleaned up from cloud")
+
+# The optional climate extension uses packaged assets and local-only settings.
+_official_aircon_setup = async_setup
+
+
+async def async_setup(hass, config):
+    from .aircon_settings import load_settings, resolve_entity
+    from . import aircon_runtime
+    settings = await hass.async_add_executor_job(load_settings, hass.config.path('hwhomebridge_local.json'))
+    entity_id = resolve_entity(hass, settings)
+    enabled = bool(entity_id)
+    if enabled:
+        settings['entity_id'] = entity_id
+        await hass.async_add_executor_job(aircon_runtime.install, hass, settings)
+    result = await _official_aircon_setup(hass, config)
+    if enabled:
+        hass.data[DOMAIN]['actual_aircon_task'] = hass.async_create_background_task(
+            aircon_runtime.start(hass), 'hwhomebridge_aircon')
+    return result
