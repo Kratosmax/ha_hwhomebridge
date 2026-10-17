@@ -28,8 +28,9 @@ PROBE = None
 def snapshot(state):
     if state is None or state.state in ('unknown', 'unavailable'):
         return {}
+    # Compatibility: Huawei current and target both represent the HA setpoint.
     fields = [('switch', 'state', 'on'), ('mode', 'state', 'mode'),
-              ('fan', 'fan_mode', 'gear'), ('temperature', 'current_temperature', 'current')]
+              ('fan', 'fan_mode', 'gear'), ('temperature', 'temperature', 'current')]
     output = {}
     for service, field, characteristic in fields:
         value = report(state, field, characteristic)

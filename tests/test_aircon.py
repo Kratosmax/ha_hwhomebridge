@@ -34,15 +34,17 @@ class ClimateTests(unittest.TestCase):
             'hvac_modes': ['auto', 'cool', 'heat', 'dry', 'fan_only', 'off'],
         })
 
-    def test_current_and_target_are_distinct(self):
+    def test_huawei_current_and_target_follow_setpoint(self):
         snapshot = scope['snapshot'](self.state)
-        self.assertEqual(snapshot['temperature'], {'current': 22, 'target': 25})
+        self.assertEqual(snapshot['temperature'], {'current': 25, 'target': 25})
         self.state.attributes['temperature'] = 28
-        self.assertEqual(scope['snapshot'](self.state)['temperature'], {'current': 22, 'target': 28})
+        self.assertEqual(scope['snapshot'](self.state)['temperature'], {'current': 28, 'target': 28})
 
-    def test_missing_current_is_not_fabricated(self):
+    def test_setpoint_reporting_does_not_require_room_temperature(self):
         self.state.attributes['current_temperature'] = None
-        self.assertEqual(scope['snapshot'](self.state)['temperature'], {'target': 25})
+        self.assertEqual(scope['snapshot'](self.state)['temperature'], {'current': 25, 'target': 25})
+        self.state.attributes['temperature'] = None
+        self.assertNotIn('temperature', scope['snapshot'](self.state))
 
     def test_profile_mode_order(self):
         self.assertEqual(conversion.command(self.state, 'state', {'mode': 3}), ('set_hvac_mode', {'hvac_mode': 'fan_only'}))

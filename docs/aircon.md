@@ -27,7 +27,7 @@ HACS 自定义仓库添加 `Kratosmax/ha_hwhomebridge`，类别选择集成。�
 
 ## 温度语义和已知问题
 
-HA `temperature` 是目标设定温度，对应 `temperature.target`；`current_temperature` 是环境实测温度，对应 `temperature.current`。当前源集成可能不提供环境温度，此时省略 `current`，不伪造数值、不用目标温度代替环境温度。智慧生活显示固定值的问题仍需区分源缺失与卡片缓存；不能把调节目标温度当成环境温度也应变化。
+按用户指定的兼容方式，华为 `temperature.current` 和 `temperature.target` 均取 HA `temperature`，即当前设置温度。设置27℃时两字段均上报27。此映射不代表环境实测温度，也不绑定外部温度传感器；目标温度缺失时不填默认值。模式、风速及目标温度控制逻辑不变。小艺和 App 的最终查询效果需实机验收。
 
 ## 升级与回滚
 
