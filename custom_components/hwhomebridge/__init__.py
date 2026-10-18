@@ -52,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 manufacturer = device_entry.manufacturer or ""
             _create_bridge_device_entry_async(vd, name, model, manufacturer)
 
+    from .native_probe_service import async_register
+    async_register(hass)
     _LOGGER.info("hwhomebridge config entry setup complete")
     return True
 
@@ -118,8 +120,42 @@ async def async_setup(hass, config):
     if enabled:
         settings['entity_id'] = entity_id
         await hass.async_add_executor_job(aircon_runtime.install, hass, settings)
+    sensor_enabled = enabled and settings.get('thermohygrometer_enabled', False)
+    if sensor_enabled:
+        from . import thermohygrometer_runtime
+        await hass.async_add_executor_job(thermohygrometer_runtime.install, hass)
+    binary_enabled = sensor_enabled and settings.get('contact_moisture_enabled', False)
+    if binary_enabled:
+        from . import contact_moisture_runtime
+        binary_enabled = await hass.async_add_executor_job(contact_moisture_runtime.install, hass, settings)
+    socket_enabled = binary_enabled and settings.get('socket_test_enabled', False)
+    if socket_enabled:
+        from . import socket_runtime
+        try:
+            await hass.async_add_executor_job(socket_runtime.install, hass, settings)
+        except Exception as exc:
+            socket_enabled = False
+            _LOGGER.error('Socket test validation failed (%s); retaining working library', type(exc).__name__)
+            if settings.get('gas_sensor_enabled'):
+                contact_moisture_runtime.disable_gas()
+                settings = {**settings, 'gas_sensor_enabled': False}
+                try:
+                    await hass.async_add_executor_job(socket_runtime.install, hass, settings)
+                    socket_enabled = True
+                    _LOGGER.warning('Gas candidate disabled; verified socket library restored before bridge startup')
+                except Exception as fallback_exc:
+                    _LOGGER.error('Socket baseline validation failed (%s)', type(fallback_exc).__name__)
     result = await _official_aircon_setup(hass, config)
     if enabled:
         hass.data[DOMAIN]['actual_aircon_task'] = hass.async_create_background_task(
             aircon_runtime.start(hass), 'hwhomebridge_aircon')
+    if sensor_enabled:
+        hass.data[DOMAIN]['thermohygrometer_task'] = hass.async_create_background_task(
+            thermohygrometer_runtime.start(hass), 'hwhomebridge_thermohygrometer')
+    if binary_enabled:
+        hass.data[DOMAIN]['contact_moisture_task'] = hass.async_create_background_task(
+            contact_moisture_runtime.start(hass), 'hwhomebridge_contact_moisture')
+    if socket_enabled:
+        hass.data[DOMAIN]['socket_test_task'] = hass.async_create_background_task(
+            socket_runtime.start(hass, settings), 'hwhomebridge_socket_test')
     return result

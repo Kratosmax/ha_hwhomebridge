@@ -1,0 +1,318 @@
+{
+  "source_sha256": "efa49bee73df8a975fd4ce170d6e2d0b1aa927d91781c264424e9cb96f6d33a4",
+  "candidate_sha256": "a96d53ea538146c4572c5e07d86979cc2b27e7af53c35a50093974c21f829138",
+  "source_relative": "gas_test/baseline.so",
+  "candidate_relative": "gas_test/lib/amd64/libhilink_bridge.so",
+  "source_service_capacity": 64,
+  "candidate_service_capacity": 64,
+  "baseline_metadata": [
+    {
+      "index": 0,
+      "product_id": "124U",
+      "sub_product_id": "00",
+      "model": "1.0",
+      "device_type": "01D",
+      "manufacturer": "19c",
+      "protocol_type": 1,
+      "service_names": [
+        "binarySwitch",
+        "memorySwitch",
+        "power",
+        "consumption",
+        "timer",
+        "timerInfo",
+        "delay",
+        "devOta",
+        "netInfo",
+        "faultDetection"
+      ],
+      "service_ids": [
+        "switch",
+        "memorySwitch",
+        "power",
+        "consumption",
+        "timer",
+        "timerInfo",
+        "delay",
+        "update",
+        "netInfo",
+        "faultDetection"
+      ]
+    },
+    {
+      "index": 1,
+      "product_id": "9MU7",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "119",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "cct"
+      ]
+    },
+    {
+      "index": 2,
+      "product_id": "113B",
+      "sub_product_id": "00",
+      "model": "HO-10ZB",
+      "device_type": "018",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "doorSensor"
+      ]
+    },
+    {
+      "index": 3,
+      "product_id": "113D",
+      "sub_product_id": "00",
+      "model": "H-32ZB",
+      "device_type": "04E",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "airDetector",
+        "battery"
+      ]
+    },
+    {
+      "index": 4,
+      "product_id": "9MTR",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "09A",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "mode",
+        "status",
+        "switch",
+        "temperature"
+      ]
+    },
+    {
+      "index": 5,
+      "product_id": "2ANJ",
+      "sub_product_id": "00",
+      "model": "U2-86QMP-Z02(HW)",
+      "device_type": "012",
+      "manufacturer": "312",
+      "protocol_type": 3,
+      "service_names": [
+        "switch",
+        "mode",
+        "temperature",
+        "fan"
+      ]
+    },
+    {
+      "index": 6,
+      "product_id": "2GB5",
+      "sub_product_id": "00",
+      "model": "MIR-WA100",
+      "device_type": "03C",
+      "manufacturer": "2b0",
+      "protocol_type": 6,
+      "service_names": [
+        "warterAlarm",
+        "battery",
+        "commonFaultDetection",
+        "update",
+        "netInfo"
+      ]
+    },
+    {
+      "index": 7,
+      "product_id": "2MXG",
+      "sub_product_id": "00",
+      "model": "JT-GA01-PLC",
+      "device_type": "03A",
+      "manufacturer": "2b0",
+      "protocol_type": 5,
+      "service_names": [
+        "switch",
+        "switch",
+        "alarm",
+        "gas",
+        "fault",
+        "netInfo",
+        "ota"
+      ],
+      "service_ids": [
+        "silencer",
+        "selfCheck",
+        "alarm",
+        "gasSensor",
+        "commonFaultDetection",
+        "netInfo",
+        "update"
+      ]
+    }
+  ],
+  "expected_metadata": [
+    {
+      "index": 0,
+      "product_id": "124U",
+      "sub_product_id": "00",
+      "model": "1.0",
+      "device_type": "01D",
+      "manufacturer": "19c",
+      "protocol_type": 1,
+      "service_names": [
+        "binarySwitch",
+        "memorySwitch",
+        "power",
+        "consumption",
+        "timer",
+        "timerInfo",
+        "delay",
+        "devOta",
+        "netInfo",
+        "faultDetection"
+      ],
+      "service_ids": [
+        "switch",
+        "memorySwitch",
+        "power",
+        "consumption",
+        "timer",
+        "timerInfo",
+        "delay",
+        "update",
+        "netInfo",
+        "faultDetection"
+      ]
+    },
+    {
+      "index": 1,
+      "product_id": "9MU7",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "119",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "cct"
+      ]
+    },
+    {
+      "index": 2,
+      "product_id": "113B",
+      "sub_product_id": "00",
+      "model": "HO-10ZB",
+      "device_type": "018",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "doorSensor"
+      ]
+    },
+    {
+      "index": 3,
+      "product_id": "113D",
+      "sub_product_id": "00",
+      "model": "H-32ZB",
+      "device_type": "04E",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "airDetector",
+        "battery"
+      ]
+    },
+    {
+      "index": 4,
+      "product_id": "9MTR",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "09A",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "mode",
+        "status",
+        "switch",
+        "temperature"
+      ]
+    },
+    {
+      "index": 5,
+      "product_id": "2ANJ",
+      "sub_product_id": "00",
+      "model": "U2-86QMP-Z02(HW)",
+      "device_type": "012",
+      "manufacturer": "312",
+      "protocol_type": 3,
+      "service_names": [
+        "switch",
+        "mode",
+        "temperature",
+        "fan"
+      ]
+    },
+    {
+      "index": 6,
+      "product_id": "2GB5",
+      "sub_product_id": "00",
+      "model": "MIR-WA100",
+      "device_type": "03C",
+      "manufacturer": "2b0",
+      "protocol_type": 6,
+      "service_names": [
+        "alarm",
+        "battery",
+        "fault",
+        "ota",
+        "netInfo"
+      ],
+      "service_ids": [
+        "warterAlarm",
+        "battery",
+        "commonFaultDetection",
+        "update",
+        "netInfo"
+      ]
+    },
+    {
+      "index": 7,
+      "product_id": "2MXG",
+      "sub_product_id": "00",
+      "model": "JT-GA01-PLC",
+      "device_type": "03A",
+      "manufacturer": "2b0",
+      "protocol_type": 5,
+      "service_names": [
+        "switch",
+        "switch",
+        "alarm",
+        "gas",
+        "fault",
+        "netInfo",
+        "ota"
+      ],
+      "service_ids": [
+        "silencer",
+        "selfCheck",
+        "alarm",
+        "gasSensor",
+        "commonFaultDetection",
+        "netInfo",
+        "update"
+      ]
+    }
+  ],
+  "expected_unchanged_slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+  ]
+}

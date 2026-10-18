@@ -18,9 +18,16 @@ def load_settings(path):
     entity_id = data.get('entity_id')
     if entity_id is not None and (not isinstance(entity_id, str) or not entity_id.startswith('climate.')):
         raise ValueError('entity_id must select a climate entity')
-    for key in ('enabled', 'capture_native_events'):
+    for key in ('enabled', 'capture_native_events', 'thermohygrometer_enabled', 'contact_moisture_enabled', 'gas_sensor_enabled', 'gas_sensor_registered', 'socket_test_enabled', 'socket_test_registered'):
         if key in data and type(data[key]) is not bool:
             raise ValueError(f'{key} must be boolean')
+    revision = data.get('gas_sensor_identity_version', 1)
+    if type(revision) is not int or revision not in (1, 2):
+        raise ValueError('gas_sensor_identity_version must be 1 or 2')
+    registered = data.get('sensor_registered_sns', [])
+    if (not isinstance(registered, list) or any(not isinstance(sn, str) or not sn or len(sn)>39 for sn in registered)
+            or len(set(registered)) != len(registered)):
+        raise ValueError('sensor_registered_sns must contain distinct sensor serials')
     return data
 
 

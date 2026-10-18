@@ -1089,7 +1089,11 @@ class ServiceRouter:
             True 表示同步成功
         """
         # 上报每个 service 的状态
+        seen_entities = set()
         for service_id, entry in vd.service_entries.items():
+            if entry.entity_id in seen_entities:
+                continue
+            seen_entities.add(entry.entity_id)
             # 获取 entity 的当前状态
             if self._hass:
                 state = self._hass.states.get(entry.entity_id)

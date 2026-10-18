@@ -1,8 +1,10 @@
 import ast
+import concurrent.futures
 import importlib.util
 import json
 import pathlib
 import tempfile
+import time
 import types
 import unittest
 
@@ -21,7 +23,7 @@ conversion = load('aircon_conversion')
 settings = load('aircon_settings')
 scope = {'json': json, 'command': conversion.command, 'report': conversion.report}
 tree = ast.parse((COMPONENT / 'aircon_runtime.py').read_text(encoding='utf-8'))
-functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ('snapshot', 'translate')]
+functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ('snapshot', 'translate', 'send_temperature')]
 exec(compile(ast.Module(body=functions, type_ignores=[]), 'runtime-pure-functions', 'exec'), scope)
 
 
@@ -34,17 +36,20 @@ class ClimateTests(unittest.TestCase):
             'hvac_modes': ['auto', 'cool', 'heat', 'dry', 'fan_only', 'off'],
         })
 
-    def test_huawei_current_and_target_follow_setpoint(self):
+    def test_huawei_temperature_fields_use_integer_setpoint(self):
         snapshot = scope['snapshot'](self.state)
         self.assertEqual(snapshot['temperature'], {'current': 25, 'target': 25})
-        self.state.attributes['temperature'] = 28
-        self.assertEqual(scope['snapshot'](self.state)['temperature'], {'current': 28, 'target': 28})
+        self.state.attributes['temperature'] = 27.0
+        actual = scope['snapshot'](self.state)['temperature']
+        self.assertEqual(actual, {'current': 27, 'target': 27})
+        self.assertTrue(all(type(value) is int for value in actual.values()))
 
-    def test_setpoint_reporting_does_not_require_room_temperature(self):
+    def test_missing_room_temperature_does_not_block_setpoint(self):
         self.state.attributes['current_temperature'] = None
         self.assertEqual(scope['snapshot'](self.state)['temperature'], {'current': 25, 'target': 25})
-        self.state.attributes['temperature'] = None
-        self.assertNotIn('temperature', scope['snapshot'](self.state))
+        for target in [None, True, 26.5, float('nan'), float('inf')]:
+            self.state.attributes['temperature'] = target
+            self.assertNotIn('temperature', scope['snapshot'](self.state))
 
     def test_profile_mode_order(self):
         self.assertEqual(conversion.command(self.state, 'state', {'mode': 3}), ('set_hvac_mode', {'hvac_mode': 'fan_only'}))
@@ -61,6 +66,22 @@ class ClimateTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 conversion.command(self.state, 'temperature', {'target': value})
         self.assertEqual(conversion.command(self.state, 'temperature', {'target': 24}), ('set_temperature', {'temperature': 24.0}))
+
+    def test_temperature_report_records_sdk_completion_and_integer_payload(self):
+        for return_code in (0, -40):
+            future = concurrent.futures.Future()
+            submitted = []
+            scope.update(time=time, TEMPERATURE_TRACE=[],
+                         submit_native=lambda *args: submitted.append(args) or future)
+            router = types.SimpleNamespace(_lib=types.SimpleNamespace(UpdateHAStatus=object()),
+                                           _c_char_p=lambda value: value)
+            payload = scope['snapshot'](self.state)['temperature']
+            self.assertIs(scope['send_temperature'](router, 'test-device', payload), future)
+            self.assertEqual(json.loads(submitted[0][-1]), {'current': 25, 'target': 25})
+            self.assertEqual(len(scope['TEMPERATURE_TRACE']), 1)
+            future.set_result(return_code)
+            self.assertEqual(scope['TEMPERATURE_TRACE'][-1]['sdk_result'], return_code)
+            self.assertNotIn('test-device', json.dumps(scope['TEMPERATURE_TRACE']))
 
     def test_flat_nested_and_sid_commands(self):
         for payload in [{'target': 24}, {'temperature': {'target': 24}}, {'sid': 'temperature', 'data': {'target': 24}}]:

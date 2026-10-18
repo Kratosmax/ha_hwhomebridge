@@ -1,5 +1,6 @@
 """2ANJ adapter for the observed HA climate entity. Original products stay intact."""
 import asyncio
+from collections import deque
 import ctypes
 import hashlib
 import json
@@ -9,7 +10,7 @@ from pathlib import Path
 from . import hwbridge as bridge
 from .aircon_conversion import command, report
 from .native_log_probe import NativeLogProbe
-from .native_async import submit_callback
+from .native_async import submit_callback, submit_native
 from .product_registry import ProductDef, ServiceDef, HAMapping, AdapterDef, ModelExactMatch
 from .service_router import ServiceRouter
 from .virtual_device import SNManager
@@ -23,14 +24,14 @@ PID = '009'
 CANDIDATE_SHA = '7b04a5a732a00ac301c73719f4e8f4caa0ebf0317df8f510a4a930aaa977d404'
 STATUS = {'phase': 'prepared', 'actual_cloud_actions': 0, 'test_actions': 0}
 PROBE = None
+TEMPERATURE_TRACE = deque(maxlen=24)
 
 
 def snapshot(state):
     if state is None or state.state in ('unknown', 'unavailable'):
         return {}
-    # Compatibility: Huawei current and target both represent the HA setpoint.
     fields = [('switch', 'state', 'on'), ('mode', 'state', 'mode'),
-              ('fan', 'fan_mode', 'gear'), ('temperature', 'temperature', 'current')]
+              ('fan', 'fan_mode', 'gear')]
     output = {}
     for service, field, characteristic in fields:
         value = report(state, field, characteristic)
@@ -38,8 +39,27 @@ def snapshot(state):
             output.setdefault(service, {}).update(value)
     value = report(state, 'temperature', 'target')
     if value is not None:
-        output.setdefault('temperature', {}).update(value)
+        target = value['target']
+        # 2ANJ defines both fields as integer characteristics. As requested,
+        # both represent the HA setpoint, never an unrelated room sensor.
+        if not isinstance(target, bool) and isinstance(target, (int, float)) and target == int(target):
+            output['temperature'] = {'current': int(target), 'target': int(target)}
     return output
+
+
+def send_temperature(router, sn, value):
+    TEMPERATURE_TRACE.append({'kind': 'report_submitted', 'time': time.time(), 'value': dict(value)})
+    future = submit_native(router._lib.UpdateHAStatus, router._c_char_p(sn),
+                           router._c_char_p('temperature'), router._c_char_p(json.dumps(value)))
+    def completed(result):
+        entry = {'kind': 'report_completed', 'time': time.time(), 'value': dict(value)}
+        try:
+            entry['sdk_result'] = result.result()
+        except Exception as exc:
+            entry['error_type'] = type(exc).__name__
+        TEMPERATURE_TRACE.append(entry)
+    future.add_done_callback(completed)
+    return future
 
 
 def translate(state, payload):
@@ -156,6 +176,9 @@ def install(hass, settings):
             return original_query(router, sn, sid)
         state = snapshot(router._hass.states.get(ENTITY))
         value = state if not sid else state.get(sid)
+        if sid in ('', 'temperature'):
+            TEMPERATURE_TRACE.append({'kind': 'sdk_query', 'time': time.time(),
+                                      'value': dict(state.get('temperature', {}))})
         return json.dumps(value) if value else None
     ServiceRouter.get_char_state = query
     # ctypes c_char_p callbacks warn/leak when returning Python bytes.
@@ -177,7 +200,10 @@ def install(hass, settings):
         if not bridge.bridge_work or not STATUS.get('state_reporting_enabled'):
             return False
         for service, value in snapshot(entity_state).items():
-            router._update_hw_bridge_status(sn, service, value)
+            if service == 'temperature':
+                send_temperature(router, sn, value)
+            else:
+                router._update_hw_bridge_status(sn, service, value)
         return True
     ServiceRouter.report_state = report_state
     original_register = ServiceRouter.register_device_to_hilink
@@ -226,6 +252,8 @@ async def start(hass):
         devices = router.sn_manager.get_all_devices()
         climate = next((d for d in devices if d.product.pid == PID), None)
         return {**STATUS, 'gateway_status': bridge.lib.HILINK_GetDevStatus(),
+                'temperature_trace': list(TEMPERATURE_TRACE),
+                'bridge_device_online': climate.online if climate else None,
                 'devices': [{'sn': d.sn, 'product': d.product.pid,
                              'services': {s: e.entity_id for s, e in d.service_entries.items()}}
                             for d in devices],
@@ -234,6 +262,21 @@ async def start(hass):
                                        for k in ('hvac_modes', 'fan_modes', 'temperature', 'current_temperature', 'min_temp', 'max_temp')},
                 'aircon_sn': climate.sn if climate else None}
     hass.services.async_register('hwhomebridge', 'aircon_diagnostics', diagnostics,
+                                  supports_response=SupportsResponse.ONLY)
+
+    async def sync_temperature(call):
+        router = bridge.service_router
+        climate = next((d for d in router.sn_manager.get_all_devices() if d.product.pid == PID), None)
+        value = snapshot(hass.states.get(ENTITY)).get('temperature')
+        if climate is None or not value or not STATUS.get('state_reporting_enabled'):
+            return {'submitted': False}
+        future = send_temperature(router, climate.sn, value)
+        try:
+            result = await asyncio.wait_for(asyncio.shield(asyncio.wrap_future(future)), 5)
+            return {'submitted': True, 'value': value, 'sdk_result': result}
+        except TimeoutError:
+            return {'submitted': True, 'value': value, 'pending': True}
+    hass.services.async_register('hwhomebridge', 'aircon_sync_temperature', sync_temperature,
                                   supports_response=SupportsResponse.ONLY)
 
     async def idempotent_control_test(call):

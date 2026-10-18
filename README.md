@@ -1,9 +1,11 @@
 # Kratosmax 维护分支
 
-本仓库 fork 自 [原项目](https://github.com/Wangxiaokang666-666/ha_hwhomebridge)，保留原许可证和说明。新增 amd64 空调桥接、通用型号级插座开关适配，以及可移植的本地配置。
+本仓库 fork 自 [原项目](https://github.com/Wangxiaokang666-666/ha_hwhomebridge)，保留原许可证和说明。新增 amd64 空调、插座及传感器桥接，以及可移植的本地配置。
 
 - HACS 自定义仓库：`https://github.com/Kratosmax/ha_hwhomebridge`，类别选“集成”；维护版本使用默认 `main` 分支。
-- [空调支持、迁移和已知限制](docs/aircon.md)。原环境温度可能缺失；不会把目标温度当作环境温度。
+- [空调支持、迁移和已知限制](docs/aircon.md)。华为两个温度字段均使用 HA 设置温度，不能作为实测室温。
+- v1.2.0：修复空调整数温度同步；统一插座开关、倒计时和功率/电量上报；增加温湿度、门磁和燃气适配。扩展需要 amd64 和本地配置，默认不自动迁移设备。
+- [验证范围和接入结果](docs/autonomous-validation.md)、[尚不支持的功能与原因](docs/compatibility-limits.md)。水浸未接入成功；喂食器、门磁光照和空调自动风速尚不支持。
 - [AI/开发接续入口](CODEX_PROGRESS.md)。运行单测和隐私扫描后再推送。
 - 本地实体选择和令牌不随仓库发布；HA 根目录 `hwhomebridge_local.json` 只留在部署端。
 - 保留 `.storage/hwhomebridge` 和已有网关，不要重新配对；原有插座本地适配也要保留。

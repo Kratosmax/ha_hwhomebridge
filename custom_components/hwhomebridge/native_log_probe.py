@@ -1,5 +1,6 @@
 """Forward native stdout unchanged; persist only allowlisted numeric diagnostics."""
 import ctypes
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,9 @@ def parse_line(line):
         ('metadata_failure', r'BatchGetSubDevInfo failed, err\[(-?\d+)\]'),
         ('room_info_failure', r'BatchGetSubDevRoomInfo error\[(-?\d+)\]'),
         ('sync_payload_failure', r'Fill Batch Sync info for cloud failed, err\[(-?\d+)\]'),
+        ('cloud_add_start_index', r'Start add dev in cloud, dev index=\[(\d+)\]'),
+        ('cloud_online_start_index', r'Start online dev\[(\d+)\]'),
+        ('cloud_sync_start_index', r'Start synDev dev\[(\d+)\]'),
     )
     for kind, pattern in patterns:
         match = re.search(pattern, line)
@@ -24,6 +28,50 @@ def parse_line(line):
             events.append({'kind': kind, 'value': int(match[1])})
     if 'add dev cloud resp sucess' in line:
         events.append({'kind': 'cloud_add_success_marker'})
+    match = re.search(r'Recv cloud authCode\((Normal|Empty)\) devId:([^,\s]+), authCodeId:', line)
+    if match:
+        events.append({'kind': 'cloud_auth_state', 'present': match[1] == 'Normal',
+                       'device_fingerprint': hashlib.sha256(match[2].encode()).hexdigest()})
+    for marker, kind in (
+        ('uid hash not exist!', 'cloud_user_hash_missing'),
+        ('notify cloudsetup auth info failed!', 'cloud_auth_notification_failed'),
+        ('notify brg sub dev auth info failed!', 'subdevice_auth_notification_failed'),
+        ('notify auth code failed', 'auth_notification_failed'),
+    ):
+        if marker in line:
+            events.append({'kind': kind})
+    # Some SDK builds print the JSON response; retain schema evidence only.
+    # Neither a raw response nor any authentication field is persisted here.
+    if '"successList"' in line or '"failureList"' in line:
+        for start in (m.start() for m in re.finditer(r'\{', line)):
+            try:
+                response, _ = json.JSONDecoder().raw_decode(line[start:])
+            except (ValueError, TypeError):
+                continue
+            if not isinstance(response, dict):
+                continue
+            if not any(k in response for k in ('successList', 'failureList')):
+                continue
+            for key, success in (('successList', True), ('failureList', False)):
+                items = response.get(key)
+                if not isinstance(items, list):
+                    continue
+                events.append({'kind': 'cloud_bind_response_count', 'success': success,
+                               'value': len(items)})
+                for item in items[:64]:
+                    if not isinstance(item, dict):
+                        continue
+                    auth = item.get('authCodeInfo')
+                    event = {'kind': 'cloud_bind_response_item', 'success': success,
+                             'device_id_present': isinstance(item.get('devId'), str) and bool(item['devId']),
+                             'auth_code_present': isinstance(auth, dict) and bool(auth.get('authCode'))}
+                    if event['device_id_present']:
+                        event['device_fingerprint'] = hashlib.sha256(item['devId'].encode()).hexdigest()
+                    events.append(event)
+            break
+    match = re.search(r'subdev Cresp dev\[(\d+)\] status:(\d+)', line)
+    if match:
+        events.append({'kind': 'cloud_response_index', 'index': int(match[1]), 'status': int(match[2])})
     if 'HBAC' in line:
         if '[BatchGetSubDevInfo]' in line:
             events.append({'kind': 'test_metadata_query'})

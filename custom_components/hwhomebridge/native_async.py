@@ -61,7 +61,7 @@ _callback_executor = concurrent.futures.ThreadPoolExecutor(
 # 单次等待的默认上限（秒）
 DEFAULT_NATIVE_TIMEOUT = 30
 
-# 排队深度告警阈值：超过即说明 SDK 正长期持锁
+# 待完成请求告警阈值；短时批量提交也可能达到，不单凭计数判断锁阻塞。
 _PENDING_WARN_THRESHOLD = 8
 
 _pending_lock = threading.Lock()
@@ -77,8 +77,7 @@ def _enter_queue():
         if depth >= _PENDING_WARN_THRESHOLD and not _warned:
             _warned = True
             _LOGGER.warning(
-                "SDK 调用排队已达 %s 项，说明原生库长时间未释放内部锁；"
-                "事件循环仍保持响应",
+                "原生请求待完成 %s 项（含等待及执行中）；持续积压时请检查 SDK 锁",
                 depth,
             )
 
@@ -91,13 +90,33 @@ def _exit_queue():
             _warned = False
 
 
+def queue_diagnostics():
+    """Read-only counts; never inspect or call the SDK from diagnostics."""
+    with _pending_lock:
+        return {'pending': _pending_count, 'warning_threshold': _PENDING_WARN_THRESHOLD}
+
+
 def _guarded(func, args, kwargs):
     """执行原生调用并维护排队计数。"""
-    _enter_queue()
     try:
         return func(*args, **kwargs)
     finally:
         _exit_queue()
+
+
+def _submit(executor, func, args, kwargs):
+    # Count from submission, including jobs waiting behind a blocked SDK call.
+    _enter_queue()
+    try:
+        future = executor.submit(_guarded, func, args, kwargs)
+    except BaseException:
+        _exit_queue()
+        raise
+    def cancelled(result):
+        if result.cancelled():
+            _exit_queue()
+    future.add_done_callback(cancelled)
+    return future
 
 
 def submit_native(func, *args, **kwargs):
@@ -106,7 +125,7 @@ def submit_native(func, *args, **kwargs):
     供已经位于工作线程的调用者使用（SDK 回调线程、executor 任务）。
     调用方不需要等待结果。
     """
-    return _sdk_executor.submit(_guarded, func, args, kwargs)
+    return _submit(_sdk_executor, func, args, kwargs)
 
 
 def submit_callback(func, *args, **kwargs):
@@ -116,7 +135,7 @@ def submit_callback(func, *args, **kwargs):
     等需要 SDK 锁的函数，而回调发生时 SDK 可能正持着那把锁。两者若共用一条
     线程，一次卡住的回调就会把后续所有设备注册堵死。
     """
-    return _callback_executor.submit(_guarded, func, args, kwargs)
+    return _submit(_callback_executor, func, args, kwargs)
 
 
 def drain_native(timeout=DEFAULT_NATIVE_TIMEOUT):
@@ -126,9 +145,8 @@ def drain_native(timeout=DEFAULT_NATIVE_TIMEOUT):
     任务都已出队执行完毕。销毁 SDK（`exit_brg`）或删除持久化文件前必须先
     排空，否则会在原生调用还在进行时拆掉底层资源。
 
-    注意：不能以 `_pending_count == 0` 作为提前返回的条件 —— 该计数由执行线程
-    维护，任务「已提交但尚未开始执行」时它仍是 0，提前返回会在任务真正跑起来
-    之前就放行清理。
+    注意：保留队列哨兵作为顺序屏障；计数也包括另一条回调执行器的任务，
+    不能用该共享计数代替 SDK 队列自身的排空确认。
     """
     try:
         _sdk_executor.submit(lambda: None).result(timeout=timeout)

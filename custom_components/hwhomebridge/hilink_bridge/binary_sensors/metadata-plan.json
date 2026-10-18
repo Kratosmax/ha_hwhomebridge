@@ -1,0 +1,245 @@
+{
+  "source_sha256": "d8401ae4db1307a7e5e3b7b1c3b4af0316eccc6b23643ffa83ee28b0816dcb58",
+  "candidate_sha256": "ea844c3bd54d324f116ca69bf0dc3ed94e3987f3f6946a8cceea32aa5be88de0",
+  "source_relative": "sensors/lib/amd64/libhilink_bridge.so",
+  "candidate_relative": "binary_sensors/lib/amd64/libhilink_bridge.so",
+  "baseline_metadata": [
+    {
+      "index": 0,
+      "product_id": "9MTL",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "10E",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "cct"
+      ]
+    },
+    {
+      "index": 1,
+      "product_id": "9MU7",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "119",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "cct"
+      ]
+    },
+    {
+      "index": 2,
+      "product_id": "9MTJ",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "21F",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "status",
+        "cct"
+      ]
+    },
+    {
+      "index": 3,
+      "product_id": "113D",
+      "sub_product_id": "00",
+      "model": "H-32ZB",
+      "device_type": "04E",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "airDetector",
+        "battery"
+      ]
+    },
+    {
+      "index": 4,
+      "product_id": "9MTR",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "09A",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "mode",
+        "status",
+        "switch",
+        "temperature"
+      ]
+    },
+    {
+      "index": 5,
+      "product_id": "2ANJ",
+      "sub_product_id": "00",
+      "model": "U2-86QMP-Z02(HW)",
+      "device_type": "012",
+      "manufacturer": "312",
+      "protocol_type": 3,
+      "service_names": [
+        "switch",
+        "mode",
+        "temperature",
+        "fan"
+      ]
+    },
+    {
+      "index": 6,
+      "product_id": "9MTW",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "026",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "action",
+        "cooker",
+        "time",
+        "status",
+        "switch"
+      ]
+    },
+    {
+      "index": 7,
+      "product_id": "9MTX",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "211",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "electric"
+      ]
+    }
+  ],
+  "expected_metadata": [
+    {
+      "index": 0,
+      "product_id": "9MTL",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "10E",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "cct"
+      ]
+    },
+    {
+      "index": 1,
+      "product_id": "9MU7",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "119",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "brightness",
+        "cct"
+      ]
+    },
+    {
+      "index": 2,
+      "product_id": "113B",
+      "sub_product_id": "00",
+      "model": "HO-10ZB",
+      "device_type": "018",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "doorSensor"
+      ]
+    },
+    {
+      "index": 3,
+      "product_id": "113D",
+      "sub_product_id": "00",
+      "model": "H-32ZB",
+      "device_type": "04E",
+      "manufacturer": "0d2",
+      "protocol_type": 1,
+      "service_names": [
+        "airDetector",
+        "battery"
+      ]
+    },
+    {
+      "index": 4,
+      "product_id": "9MTR",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "09A",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "mode",
+        "status",
+        "switch",
+        "temperature"
+      ]
+    },
+    {
+      "index": 5,
+      "product_id": "2ANJ",
+      "sub_product_id": "00",
+      "model": "U2-86QMP-Z02(HW)",
+      "device_type": "012",
+      "manufacturer": "312",
+      "protocol_type": 3,
+      "service_names": [
+        "switch",
+        "mode",
+        "temperature",
+        "fan"
+      ]
+    },
+    {
+      "index": 6,
+      "product_id": "2GB5",
+      "sub_product_id": "00",
+      "model": "MIR-WA100",
+      "device_type": "03C",
+      "manufacturer": "2b0",
+      "protocol_type": 6,
+      "service_names": [
+        "warterAlarm",
+        "battery",
+        "commonFaultDetection",
+        "update",
+        "netInfo"
+      ]
+    },
+    {
+      "index": 7,
+      "product_id": "9MTX",
+      "sub_product_id": "00",
+      "model": "AAA",
+      "device_type": "211",
+      "manufacturer": "002",
+      "protocol_type": 6,
+      "service_names": [
+        "switch",
+        "electric"
+      ]
+    }
+  ],
+  "expected_unchanged_slots": [
+    0,
+    1,
+    3,
+    4,
+    5,
+    7
+  ]
+}

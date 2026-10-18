@@ -27,7 +27,9 @@ HACS 自定义仓库添加 `Kratosmax/ha_hwhomebridge`，类别选择集成。�
 
 ## 温度语义和已知问题
 
-按用户指定的兼容方式，华为 `temperature.current` 和 `temperature.target` 均取 HA `temperature`，即当前设置温度。设置27℃时两字段均上报27。此映射不代表环境实测温度，也不绑定外部温度传感器；目标温度缺失时不填默认值。模式、风速及目标温度控制逻辑不变。小艺和 App 的最终查询效果需实机验收。
+v1.2.0 按用户要求将华为 `temperature.current` 与 `temperature.target` 都映射为HA设置温度，按2ANJ定义转换为整数。例如HA设置27.0℃时，输出 `{"current":27,"target":27}`。此 current 表示设置值，不是实测室温；不绑定其他房间传感器。目标值缺失、非有限数或非整数时不填默认温度。用户已确认退出主页再进详情可以同步显示，小艺语音查询尚待单独复测。
+
+本机诊断保留最多24条温度查询/上报记录及SDK返回码，不记录设备身份或密钥。`aircon_sync_temperature` 仅重新上报已有设置温度，不发送空调设置命令；SDK返回0只作为SDK层证据，不能替代App实测。
 
 ## 升级与回滚
 
